@@ -285,11 +285,6 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
             lookAt(state.planet.getLastSector());
         }
 
-        if(state.planet.requiresMeshReload){
-            state.planet.requiresMeshReload = false;
-            state.planet.reloadMesh();
-        }
-
         return super.show();
     }
 
@@ -661,6 +656,10 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
                         int timeShift = input.keyDown(KeyCode.rightBracket) ? 1 : input.keyDown(KeyCode.leftBracket) ? -1 : 0;
                         if(timeShift != 0){
                             universe.setSeconds(universe.secondsf() + timeShift * Time.delta * 2.5f);
+                        }
+
+                        if(input.keyTap(KeyCode.r)){
+                            state.planet.reloadMeshAsync();
                         }
                     }
 

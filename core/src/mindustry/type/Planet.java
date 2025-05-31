@@ -11,7 +11,6 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
-import arc.util.noise.*;
 import mindustry.content.*;
 import mindustry.content.TechTree.*;
 import mindustry.ctype.*;
@@ -43,8 +42,6 @@ public class Planet extends UnlockableContent{
     public @Nullable GenericMesh cloudMesh;
     /** Mesh used for rendering planet grid outlines. Null on server or if {@link #grid} is null. */
     public @Nullable Mesh gridMesh;
-    /** If true, this planet's mesh should be reloaded when it is next shown. */
-    public boolean requiresMeshReload;
     /** Position in global coordinates. Will be 0,0,0 until the Universe updates it. */
     public Vec3 position = new Vec3();
     /** Grid used for the sectors on the planet. Null if this planet can't be landed on. */
@@ -360,6 +357,21 @@ public class Planet extends UnlockableContent{
         mesh = meshLoader.get();
     }
 
+    public void reloadMeshAsync(){
+        if(headless) return;
+
+        mainExecutor.submit(() -> {
+            var newMesh = meshLoader.get();
+
+            Core.app.post(() -> {
+                if(mesh != null){
+                    mesh.dispose();
+                }
+                mesh = newMesh;
+            });
+        });
+    }
+
     @Override
     public void load(){
         super.load();
@@ -390,7 +402,6 @@ public class Planet extends UnlockableContent{
         }
 
         if(generator != null){
-            Noise.setSeed(sectorSeed < 0 ? id + 1 : sectorSeed);
 
             for(Sector sector : sectors){
                 generator.generateSector(sector);
